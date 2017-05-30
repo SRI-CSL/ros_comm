@@ -1,4 +1,3 @@
-# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
 # Software License Agreement (BSD License)
 #
 # Copyright (c) 2017, SRI International
@@ -32,8 +31,9 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 """
-ROS Master authorization
-This class loads the rules from a file and provides functions to authorize connections
+ROS Master authorization for Secure ROS
+This class loads the rules from file and provides functions to 
+check if clients (IP address) are authorized to make XMLRPC requests.
 """
 
 from __future__ import print_function
