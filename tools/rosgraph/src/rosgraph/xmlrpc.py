@@ -31,7 +31,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 # Revision $Id: xmlrpc.py 15336 2011-11-07 20:43:00Z kwc $
-# 
 
 from __future__ import print_function
 
@@ -68,6 +67,7 @@ except ImportError:
 import rosgraph.network
 
 from xml.dom.minidom import parseString
+from xml.etree import ElementTree
 
 def isstring(s):
     """Small helper version to check an object is a string in a way that works
@@ -78,14 +78,18 @@ def isstring(s):
     except NameError:
         return isinstance(s, str)
 
-count = 0
-
 class SilenceableXMLRPCRequestHandler(SimpleXMLRPCRequestHandler):
     def log_message(self, format, *args):
         if 0:
             SimpleXMLRPCRequestHandler.log_message(self, format, *args)
     
 class IPSilenceableXMLRPCRequestHandler(SilenceableXMLRPCRequestHandler):
+    """ Add client IP address to XMLRPC request before calling the method.
+        This is a core modification for Secure ROS, wherein for secure 
+        XMLRPC methods, the client IP address is added as an additional 
+        parameter. The method can then check if the client is authorized
+        to make the request.
+    """
     logger = logging.getLogger('roslaunch.auth')            
     secure_methods = [ "registerPublisher", "registerSubscriber", "registerService", "lookupService",
             "unregisterPublisher", "unregisterSubscriber", "unregisterService",
@@ -101,6 +105,9 @@ class IPSilenceableXMLRPCRequestHandler(SilenceableXMLRPCRequestHandler):
         SimpleXMLRPCRequestHandler.__init__(self, request, client_address, server)
 
     def insert_multicall_client_ip( self, doc ):
+        """ Function to add client IP address for a multicall XMLRPC request
+            If method shutdown is called without optional "msg" argument, insert that as well
+        """
         structs = doc.getElementsByTagName("struct")
         for s in structs:
             try:
@@ -122,38 +129,43 @@ class IPSilenceableXMLRPCRequestHandler(SilenceableXMLRPCRequestHandler):
                     else:
                         self.logger.warn( "multicall: unexpected entry %s" % name.data )
                 if methodName in self.secure_methods:
-                    ddoc = parseString( "<value><string>%s</string></value>\n" % self.client_ip )
-                    d = ddoc.firstChild.cloneNode(True)
-                    datas.appendChild(d)
+                    if methodName == "shutdown":
+                        params = ElementTree.fromstring( datas.toxml() ).findall( "param" )
+                        if len( params ) == 1:
+                            p2 = parseString( '''<param><value><string>silent</string></value></param>''' ).firstChild.cloneNode(True)
+                            datas.appendChild(p2)
+                        print( "shutdown()" )
+                    p = parseString( "<value><string>%s</string></value>\n" % self.client_ip ).firstChild.cloneNode(True)
+                    datas.appendChild(p)
             except:
               self.logger.warn( "XML system.multicall parsing error" )
 
     def decode_request_content(self, data):
-        global count 
-        count = count + 1
+        """ Function to add client IP address for a XMLRPC request for secure methods
+            If method shutdown is called without optional "msg" argument, insert that as well
+        """
         data = SimpleXMLRPCRequestHandler.decode_request_content(self, data)
         doc = parseString(data)
         ps = doc.getElementsByTagName("params")[0]
         
         methodName = doc.getElementsByTagName("methodName")[0].childNodes[0].nodeValue
         self.logger.info( "-- %s (from %s) --" % ( methodName, self.client_ip ) )
-        fname = "none.xml"
         if methodName == "system.multicall":
-          self.insert_multicall_client_ip( doc )
-          fname = "multi_%d.xml" % count
+            self.insert_multicall_client_ip( doc )
         else:
-          pdoc = parseString(
-             ''' <param><value>
+            pdoc = parseString(
+                    ''' <param><value>
                   <string>%s</string>
                   </value></param>''' % (self.client_ip,))
-          p = pdoc.firstChild.cloneNode(True)
-          fname = "single_%d.xml" % count
-          if methodName in self.secure_methods:
-            ps.appendChild(p)
-        if 0:
-            with open( fname, "w" ) as f:
-              f.write( "%s" % doc.toxml() )
-              print( "[xmlrpc] Writing XML to %s" % fname )
+            p = pdoc.firstChild.cloneNode(True)
+            if methodName in self.secure_methods:
+                if methodName == "shutdown":
+                    params = ElementTree.fromstring( ps.toxml() ).findall( "param" )
+                    if len( params ) == 1:
+                        p2 = parseString( '''<param><value><string>silent</string></value></param>''' ).firstChild.cloneNode(True)
+                        ps.appendChild(p2)
+                    #print( "shutdown: %s (%d param tags)" % ( ps.toxml(), len( params ) ) )
+                ps.appendChild(p)
         return doc.toxml()
 
 
@@ -306,7 +318,7 @@ class XmlRpcNode(object):
             port = self.port or 0 #0 = any
 
             bind_address = rosgraph.network.get_bind_address()
-            logger.info("Modified XML-RPC server binding to %s:%d" % (bind_address, port))
+            logger.info("XML-RPC server binding to %s:%d" % (bind_address, port))
             
             self.server = ThreadingXMLRPCServer((bind_address, port), log_requests)
             self.port = self.server.server_address[1] #set the port to whatever server bound to
@@ -345,6 +357,7 @@ class XmlRpcNode(object):
             else:
                 msg = "ERROR: Unable to start XML-RPC server: %s" % e.strerror
             logger.error(msg)
+            print(msg)
             raise #let higher level catch this
 
         if self.handler is not None:
