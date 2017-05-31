@@ -430,14 +430,14 @@ class ROSMasterHandler(object):
             represented as dictionaries.
         @rtype: [int, str, XMLRPCLegalValue]
         """
-        try:
-            key = resolve_name(key, caller_id)
-            param = self.param_server.get_param(key)
-        except KeyError as e: 
-            return -1, "Parameter [%s] is not set"%key, 0
+        key = resolve_name(key, caller_id)
         if not self.auth.check_param_getter( key, client_ip_address ):
             self.logger.warn( "getParam( %s, %s, %s) parameter not authorized" % ( caller_id, key, client_ip_address ) )
             return -1, "parameter not authorized", 0
+        try:
+            param = self.param_server.get_param(key)
+        except KeyError as e: 
+            return -1, "Parameter [%s] is not set"%key, 0
         return 1, "Parameter [%s]" % key, param
 
     @apivalidate(0, (non_empty_str('key'), is_ipv4('client_ip_address')))
@@ -499,10 +499,10 @@ class ROSMasterHandler(object):
            has not been set yet.
         @rtype: [int, str, XMLRPCLegalValue]
         """
-        key = resolve_name(key, caller_id)        
         if not is_uri_match( caller_api, client_ip_address ):
             self.logger.warn( "subscribeParam( %s, %s, %s, %s) caller_api not authorized" % ( caller_id, caller_api, key, client_ip_address ) )
             return -1, "caller_api not authorized", 0
+        key = resolve_name(key, caller_id)        
         if not self.auth.check_param_setter( key, client_ip_address ):
             self.logger.warn( "subscribeParam( %s, %s, %s, %s) parameter not authorized" % ( caller_id, caller_api, key, client_ip_address ) )
             return -1, "parameter not authorized", 0
@@ -713,14 +713,14 @@ class ROSMasterHandler(object):
            ROSRPC URI with address and port.  Fails if there is no provider.
         @rtype: (int, str, str)
         """
+        if not self.auth.check_requester( service, client_ip_address ):
+            self.logger.warn( "lookupService( %s, %s, %s ) service not authorized" % ( caller_id, service, client_ip_address ) )
+            return -1, "service not authorized", 0
         try:
             self.ps_lock.acquire()
             service_url = self.services.get_service_api(service)
         finally:
             self.ps_lock.release()
-        if not self.auth.check_requester( service, client_ip_address ):
-            self.logger.warn( "lookupService( %s, %s, %s ) service not authorized" % ( caller_id, service, client_ip_address ) )
-            return -1, "service not authorized", 0
         self.logger.info( "lookupService( %s, %s, %s ) OK" % ( caller_id, service, client_ip_address ) )
         if service_url:
             return 1, "rosrpc URI: [%s]"%service_url, service_url
@@ -1004,7 +1004,6 @@ class ROSMasterHandler(object):
                     self.auth.check_subscriber( t, client_ip_address )]
         finally:
             self.ps_lock.release()
-        """ TODO """
         return 1, "current topics", retval
     
     @apivalidate([], (is_ipv4('client_ip_address'),))
