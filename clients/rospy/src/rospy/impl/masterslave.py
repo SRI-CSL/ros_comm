@@ -138,13 +138,14 @@ def is_requester_authorized( service, client_ip_address ):
         We use the valid URI list from master for this topic and checking if the 
         client_ip_address of the caller matches with one of the valid URIs.
 
-        @param topic: Topic for which subscriber authorization is requested
-        @param client_ip_address: Client IP address for which authorization check is requested 
+        @param service: Service for which subscriber authorization is requested
+        @type  service: str 
+        @param client_ip_address: IP address of client making request
+        @type  client_ip_address: str 
 
         @return: If client_ip_address is authorized for topic 
         @rtype: bool
     """
-    # TODO
     masterUri = rosgraph.get_master_uri()
     this_caller_id = rospy.names.get_caller_id()
     auth_clients = get_service_client_list( masterUri, service, this_caller_id )
@@ -164,7 +165,9 @@ def is_subscriber_authorized( topic, client_ip_address ):
         client_ip_address of the caller matches with one of the valid URIs.
 
         @param topic: Topic for which subscriber authorization is requested
-        @param client_ip_address: Client IP address for which authorization check is requested 
+        @type  topic: str 
+        @param client_ip_address: IP address of client making request
+        @type  client_ip_address: str 
 
         @return: If client_ip_address is authorized for topic 
         @rtype: bool
@@ -187,7 +190,7 @@ def is_subscriber_authorized( topic, client_ip_address ):
                 % ( this_caller_id, n, code, msg, uri ) )
         if code > 0:
             if is_uri_match( uri, client_ip_address ):
-                auth_logger.info( "Subscriber %s XMLRPC URI (%s) matches client IP (%s)" % 
+                auth_logger.debug( "Subscriber %s XMLRPC URI (%s) matches client IP (%s)" % 
                         ( n, uri, client_ip_address ) )
                 return True
             else:
@@ -222,6 +225,7 @@ def apivalidate(error_return_value, validators=()):
                 _logger.error("%s invoked without caller_id paramter"%f.__name__)
                 return -1, "missing required caller_id parameter", error_return_value
             elif len(args) != f.__code__.co_argcount:
+                auth_logger.warn( "%s invoked with bad call arity" % f.__name__ )
                 return -1, "Error: bad call arity", error_return_value
 
             instance = args[0]
@@ -396,11 +400,14 @@ class ROSHandler(XmlRpcHandler):
     # EXTERNAL API
 
     @apivalidate([], (is_ipv4('client_ip_address'),))
-    def getBusStats(self, caller_id, client_ip_address):
+    def getBusStats(self, caller_id, client_ip_address = "127.0.0.1"):
         """
         Retrieve transport/topic statistics
+        Only master is authorized to call this method 
         @param caller_id: ROS caller id    
         @type  caller_id: str
+        @param client_ip_address: IP address of client making request
+        @type  client_ip_address: str 
         @return: [publishStats, subscribeStats, serviceStats]::
            publishStats: [[topicName, messageDataSent, pubConnectionData]...[topicNameN, messageDataSentN, pubConnectionDataN]]
                pubConnectionData: [connectionId, bytesSent, numSent, connected]* . 
@@ -408,26 +415,28 @@ class ROSHandler(XmlRpcHandler):
                subConnectionData: [connectionId, bytesReceived, dropEstimate, connected]* . dropEstimate is -1 if no estimate. 
            serviceStats: not sure yet, probably akin to [numRequests, bytesReceived, bytesSent] 
         """
-        is_master = is_uri_match( self.masterUri, client_ip_address )
-        pub_stats, sub_stats = get_topic_manager().get_pub_sub_stats()
         #TODO: serviceStats
-        if is_master:
+        if is_uri_match( self.masterUri, client_ip_address ):
+            pub_stats, sub_stats = get_topic_manager().get_pub_sub_stats()
             return 1, '', [pub_stats, sub_stats, []]
         else:
+            auth_logger.warn( "getBusStatus( %s, %s ) method not authorized" % ( caller_id, client_ip_address ) )
             return -1, "Only master authorized to call getBusStats()", []
 
     @apivalidate([], (is_ipv4('client_ip_address'),))
-    def getBusInfo(self, caller_id, client_ip_address):
+    def getBusInfo(self, caller_id, client_ip_address = "127.0.0.1"):
         """
         Retrieve transport/topic connection information
+        Only master is authorized to call this method
         @param caller_id: ROS caller id    
         @type  caller_id: str
+        @param client_ip_address: IP address of client making request
+        @type  client_ip_address: str 
         """
-        """ Only master is authorized to call this method """
         if is_uri_match( self.masterUri, client_ip_address ):
-            auth_logger.warn( "getBusInfo( %s, %s ) method not authorized" % ( caller_id, client_ip_address ) )
             return 1, "bus info", get_topic_manager().get_pub_sub_info()
         else:
+            auth_logger.warn( "getBusInfo( %s, %s ) method not authorized" % ( caller_id, client_ip_address ) )
             return -1, "method not authorized", []
 
     
@@ -462,13 +471,15 @@ class ROSHandler(XmlRpcHandler):
             return True
         
     @apivalidate(0, (None, is_ipv4('client_ip_address')))
-    def shutdown(self, caller_id, msg, client_ip_address):
+    def shutdown(self, caller_id, msg, client_ip_address = "127.0.0.1"):
         """
         Stop this server
         @param caller_id: ROS caller id
         @type  caller_id: str
-        @param msg: a message describing why the node is being shutdown. (XXX no longer an optional argument)
+        @param msg: a message describing why the node is being shutdown.
         @type  msg: str
+        @param client_ip_address: IP address of client making request
+        @type  client_ip_address: str 
         @return: [code, msg, 0]
         @rtype: [int, str, int]
         """
@@ -480,8 +491,8 @@ class ROSHandler(XmlRpcHandler):
             signal_shutdown('external shutdown request from [%s]: [%s]'%(caller_id, msg))
         return 1, "shutdown", 0
 
-    @apivalidate(-1, (is_ipv4('client_ip_address'),))
-    def getPid(self, caller_id, client_ip_address):
+    @apivalidate(-1)
+    def getPid(self, caller_id):
         """
         Get the PID of this server
         @param caller_id: ROS caller id
@@ -489,9 +500,6 @@ class ROSHandler(XmlRpcHandler):
         @return: [1, "", serverProcessPID]
         @rtype: [int, str, int]
         """
-        if is_uri_match( self.masterUri, client_ip_address ):
-            auth_logger.warn( "shutdown( %s, '%s', %s ) method not authorized" 
-                    % ( caller_id, msg, client_ip_address ) )
         return 1, "", os.getpid()
 
 
@@ -499,11 +507,13 @@ class ROSHandler(XmlRpcHandler):
     # PUB/SUB APIS
 
     @apivalidate([], (is_ipv4('client_ip_address'),))
-    def getSubscriptions(self, caller_id, client_ip_address):
+    def getSubscriptions(self, caller_id, client_ip_address = "127.0.0.1"):
         """
         Retrieve a list of topics that this node subscribes to.
         @param caller_id: ROS caller id    
         @type  caller_id: str
+        @param client_ip_address: IP address of client making request
+        @type  client_ip_address: str 
         @return: list of topics this node subscribes to.
         @rtype: [int, str, [ [topic1, topicType1]...[topicN, topicTypeN]]]
         """
@@ -515,11 +525,13 @@ class ROSHandler(XmlRpcHandler):
 
 
     @apivalidate([], (is_ipv4('client_ip_address'),))
-    def getPublications(self, caller_id, client_ip_address):
+    def getPublications(self, caller_id, client_ip_address = "127.0.0.1"):
         """
         Retrieve a list of topics that this node publishes.
         @param caller_id: ROS caller id    
         @type  caller_id: str
+        @param client_ip_address: IP address of client making request
+        @type  client_ip_address: str 
         @return: list of topics published by this node.
         @rtype: [int, str, [ [topic1, topicType1]...[topicN, topicTypeN]]]
         """
@@ -603,7 +615,7 @@ class ROSHandler(XmlRpcHandler):
         return 0, "ERROR: publisher returned unsupported protocol choice: %s"%result, 0
 
     @apivalidate(-1, (global_name('parameter_key'), None, is_ipv4('client_ip_address')))
-    def paramUpdate(self, caller_id, parameter_key, parameter_value, client_ip_address):
+    def paramUpdate(self, caller_id, parameter_key, parameter_value, client_ip_address = "127.0.0.1"):
         """
         Callback from master of current publisher list for specified topic.
         @param caller_id: ROS caller id
@@ -612,6 +624,8 @@ class ROSHandler(XmlRpcHandler):
         @type  parameter_key: str
         @param parameter_value New parameter value
         @type  parameter_value: XMLRPC-legal value
+        @param client_ip_address: IP address of client making request
+        @type  client_ip_address: str 
         @return: [code, status, ignore]. If code is -1 ERROR, the node
         is not subscribed to parameter_key
         @rtype: [int, str, int]
@@ -627,7 +641,7 @@ class ROSHandler(XmlRpcHandler):
             return -1, 'not subscribed', 0
 
     @apivalidate(-1, (is_topic('topic'), is_publishers_list('publishers'), is_ipv4('client_ip_address')))
-    def publisherUpdate(self, caller_id, topic, publishers, client_ip_address ):
+    def publisherUpdate(self, caller_id, topic, publishers, client_ip_address = "127.0.0.1"):
         """
         Callback from master of current publisher list for specified topic.
         @param caller_id: ROS caller id
@@ -636,6 +650,8 @@ class ROSHandler(XmlRpcHandler):
         @type  topic: str
         @param publishers: list of current publishers for topic in the form of XMLRPC URIs
         @type  publishers: [str]
+        @param client_ip_address: IP address of client making request
+        @type  client_ip_address: str 
         @return: [code, status, ignore]
         @rtype: [int, str, int]
         """
@@ -654,7 +670,7 @@ class ROSHandler(XmlRpcHandler):
     
     _remap_table['requestTopic'] = [0] # remap topic 
     @apivalidate([], (is_topic('topic'), non_empty('protocols'), is_ipv4('client_ip_address')))
-    def requestTopic(self, caller_id, topic, protocols, client_ip_address ):
+    def requestTopic(self, caller_id, topic, protocols, client_ip_address = "127.0.0.1"):
         """
         Publisher node API method called by a subscriber node.
    
@@ -672,6 +688,8 @@ class ROSHandler(XmlRpcHandler):
          protocol is a list of the form [ProtocolName,
          ProtocolParam1, ProtocolParam2...N]
         @type  protocols: [[str, XmlRpcLegalValue*]]
+        @param client_ip_address: IP address of client making request
+        @type  client_ip_address: str 
         @return: [code, msg, protocolParams]. protocolParams may be an
         empty list if there are no compatible protocols.
         @rtype: [int, str, [str, XmlRpcLegalValue*]]
