@@ -474,6 +474,7 @@ class ROSHandler(XmlRpcHandler):
     def shutdown(self, caller_id, msg, client_ip_address = "127.0.0.1"):
         """
         Stop this server
+        Only master is authorized to call this method 
         @param caller_id: ROS caller id
         @type  caller_id: str
         @param msg: a message describing why the node is being shutdown.
@@ -510,6 +511,7 @@ class ROSHandler(XmlRpcHandler):
     def getSubscriptions(self, caller_id, client_ip_address = "127.0.0.1"):
         """
         Retrieve a list of topics that this node subscribes to.
+        Only master is authorized to call this method 
         @param caller_id: ROS caller id    
         @type  caller_id: str
         @param client_ip_address: IP address of client making request
@@ -528,6 +530,7 @@ class ROSHandler(XmlRpcHandler):
     def getPublications(self, caller_id, client_ip_address = "127.0.0.1"):
         """
         Retrieve a list of topics that this node publishes.
+        Only master is authorized to call this method 
         @param caller_id: ROS caller id    
         @type  caller_id: str
         @param client_ip_address: IP address of client making request
@@ -617,7 +620,8 @@ class ROSHandler(XmlRpcHandler):
     @apivalidate(-1, (global_name('parameter_key'), None, is_ipv4('client_ip_address')))
     def paramUpdate(self, caller_id, parameter_key, parameter_value, client_ip_address = "127.0.0.1"):
         """
-        Callback from master of current publisher list for specified topic.
+        Callback from master to update specified parameter.
+        Only master is authorized to call this method 
         @param caller_id: ROS caller id
         @type  caller_id: str
         @param parameter_key str: parameter name, globally resolved
@@ -644,6 +648,7 @@ class ROSHandler(XmlRpcHandler):
     def publisherUpdate(self, caller_id, topic, publishers, client_ip_address = "127.0.0.1"):
         """
         Callback from master of current publisher list for specified topic.
+        Only master is authorized to call this method 
         @param caller_id: ROS caller id
         @type  caller_id: str
         @param topic str: topic name
@@ -673,6 +678,7 @@ class ROSHandler(XmlRpcHandler):
     def requestTopic(self, caller_id, topic, protocols, client_ip_address = "127.0.0.1"):
         """
         Publisher node API method called by a subscriber node.
+        Check if client_ip_address is authorized to subscribe to this topic.
    
         Request that source allocate a channel for communication. Subscriber provides
         a list of desired protocols for communication. Publisher returns the
@@ -694,7 +700,6 @@ class ROSHandler(XmlRpcHandler):
         empty list if there are no compatible protocols.
         @rtype: [int, str, [str, XmlRpcLegalValue*]]
         """
-        # Check if client_ip_address is authorized
         if not is_subscriber_authorized( topic, client_ip_address ):
             auth_logger.warn( "requestTopic( %s, %s, %s) topic not authorized" % 
                     ( caller_id, topic, client_ip_address ) )
