@@ -308,8 +308,6 @@ class ROSMasterHandler(object):
         @type  msg: str
         @param client_ip_address: IP address of client making request
         @type  client_ip_address: str 
-        @param client_ip_address: IP address of client making request
-        @type  client_ip_address: str 
         @return: [code, msg, 0]
         @rtype: [int, str, int]
         """
@@ -328,8 +326,6 @@ class ROSMasterHandler(object):
         """
         Get the XML-RPC URI of this server.
         @param caller_id str: ROS caller id    
-        @param client_ip_address: IP address of client making request
-        @type  client_ip_address: str 
         @return [int, str, str]: [1, "", xmlRpcUri]
         """
         return 1, "", self.uri
@@ -341,8 +337,6 @@ class ROSMasterHandler(object):
         Get the PID of this server
         @param caller_id: ROS caller id
         @type  caller_id: str
-        @param client_ip_address: IP address of client making request
-        @type  client_ip_address: str 
         @return: [1, "", serverProcessPID]
         @rtype: [int, str, int]
         """
@@ -360,8 +354,6 @@ class ROSMasterHandler(object):
         @type  caller_id: str
         @param key: parameter name
         @type  key: str
-        @param client_ip_address: IP address of client making request
-        @type  client_ip_address: str 
         @param client_ip_address: IP address of client making request
         @type  client_ip_address: str 
         @return: [code, msg, 0]
@@ -981,7 +973,7 @@ class ROSMasterHandler(object):
     def getPublishedTopics(self, caller_id, subgraph, client_ip_address = "127.0.0.1"):
         """
         Get list of topics that can be subscribed to. This does not return topics that have no publishers.
-        This only returns topics that the client is authorized to subscribe to [sros].
+        This only returns topics that the client is authorized to subscribe to.
         See L{getSystemState()} to get more comprehensive list.
         @param caller_id: ROS caller id
         @type  caller_id: str
@@ -1010,7 +1002,7 @@ class ROSMasterHandler(object):
     def getTopicTypes(self, caller_id, client_ip_address = "127.0.0.1"): 
         """
         Retrieve list topic names and their types.
-        This only returns topics that the client is authorized to subscribe to [sros].
+        This only returns topics that the client is authorized to subscribe to.
         @param caller_id: ROS caller id    
         @type  caller_id: str
         @rtype: (int, str, [[str,str]] )
