@@ -133,9 +133,9 @@ class IPSilenceableXMLRPCRequestHandler(SilenceableXMLRPCRequestHandler):
                     if methodName == "shutdown":
                         params = ElementTree.fromstring( datas.toxml() ).findall( "param" )
                         if len( params ) == 1:
+                            self.logger.debug( "multicall: added msg param to shutdown()" )
                             p2 = parseString( '''<param><value><string>silent</string></value></param>''' ).firstChild.cloneNode(True)
                             datas.appendChild(p2)
-                        print( "shutdown()" )
                     p = parseString( "<value><string>%s</string></value>\n" % self.client_ip ).firstChild.cloneNode(True)
                     datas.appendChild(p)
             except:
@@ -163,9 +163,9 @@ class IPSilenceableXMLRPCRequestHandler(SilenceableXMLRPCRequestHandler):
                 if methodName == "shutdown":
                     params = ElementTree.fromstring( ps.toxml() ).findall( "param" )
                     if len( params ) == 1:
+                        self.logger.debug( "added msg param to shutdown()" )
                         p2 = parseString( '''<param><value><string>silent</string></value></param>''' ).firstChild.cloneNode(True)
                         ps.appendChild(p2)
-                    #print( "shutdown: %s (%d param tags)" % ( ps.toxml(), len( params ) ) )
                 ps.appendChild(p)
         return doc.toxml()
 
