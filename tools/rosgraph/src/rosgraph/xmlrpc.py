@@ -97,7 +97,8 @@ class IPSilenceableXMLRPCRequestHandler(SilenceableXMLRPCRequestHandler):
             "lookupNode", "getPublishedTopics", "getTopicTypes", "getSystemState",
             "deleteParam", "setParam",
             "getParam", "searchParam", "subscribeParam", "unsubscribeParam", "hasParam", "getParamNames",
-            "getServiceClients" ]
+            "getServiceClients", "getSubscriptions", "getPublications",
+            "getBusInfo", "getBusStats"]
 
     def __init__(self, request, client_address, server):
         self.client_ip, self.client_port = client_address 
