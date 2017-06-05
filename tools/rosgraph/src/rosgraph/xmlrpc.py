@@ -91,14 +91,6 @@ class IPSilenceableXMLRPCRequestHandler(SilenceableXMLRPCRequestHandler):
         to make the request.
     """
     logger = logging.getLogger('roslaunch.auth')            
-    secure_methods = [ "registerPublisher", "registerSubscriber", "registerService", "lookupService",
-            "unregisterPublisher", "unregisterSubscriber", "unregisterService",
-            "publisherUpdate", "requestTopic", "shutdown", "paramUpdate",
-            "lookupNode", "getPublishedTopics", "getTopicTypes", "getSystemState",
-            "deleteParam", "setParam",
-            "getParam", "searchParam", "subscribeParam", "unsubscribeParam", "hasParam", "getParamNames",
-            "getServiceClients", "getSubscriptions", "getPublications",
-            "getBusInfo", "getBusStats"]
 
     def __init__(self, request, client_address, server):
         self.client_ip, self.client_port = client_address 
@@ -129,15 +121,14 @@ class IPSilenceableXMLRPCRequestHandler(SilenceableXMLRPCRequestHandler):
                         datas = arrays[0].getElementsByTagName( "data" )[0]
                     else:
                         self.logger.warn( "multicall: unexpected entry %s" % name.data )
-                if methodName in self.secure_methods:
-                    if methodName == "shutdown":
-                        params = ElementTree.fromstring( datas.toxml() ).findall( "param" )
-                        if len( params ) == 1:
-                            self.logger.debug( "multicall: added msg param to shutdown()" )
-                            p2 = parseString( '''<param><value><string>silent</string></value></param>''' ).firstChild.cloneNode(True)
-                            datas.appendChild(p2)
-                    p = parseString( "<value><string>%s</string></value>\n" % self.client_ip ).firstChild.cloneNode(True)
-                    datas.appendChild(p)
+                if methodName == "shutdown":
+                    params = ElementTree.fromstring( datas.toxml() ).findall( "param" )
+                    if len( params ) == 1:
+                        self.logger.debug( "multicall: added msg param to shutdown()" )
+                        p2 = parseString( '''<param><value><string>silent</string></value></param>''' ).firstChild.cloneNode(True)
+                        datas.appendChild(p2)
+                p = parseString( "<value><string>%s</string></value>\n" % self.client_ip ).firstChild.cloneNode(True)
+                datas.appendChild(p)
             except:
               self.logger.warn( "XML system.multicall parsing error" )
 
@@ -159,14 +150,13 @@ class IPSilenceableXMLRPCRequestHandler(SilenceableXMLRPCRequestHandler):
                   <string>%s</string>
                   </value></param>''' % (self.client_ip,))
             p = pdoc.firstChild.cloneNode(True)
-            if methodName in self.secure_methods:
-                if methodName == "shutdown":
-                    params = ElementTree.fromstring( ps.toxml() ).findall( "param" )
-                    if len( params ) == 1:
-                        self.logger.debug( "added msg param to shutdown()" )
-                        p2 = parseString( '''<param><value><string>silent</string></value></param>''' ).firstChild.cloneNode(True)
-                        ps.appendChild(p2)
-                ps.appendChild(p)
+            if methodName == "shutdown":
+                params = ElementTree.fromstring( ps.toxml() ).findall( "param" )
+                if len( params ) == 1:
+                    self.logger.debug( "added msg param to shutdown()" )
+                    p2 = parseString( '''<param><value><string>silent</string></value></param>''' ).firstChild.cloneNode(True)
+                    ps.appendChild(p2)
+            ps.appendChild(p)
         return doc.toxml()
 
 

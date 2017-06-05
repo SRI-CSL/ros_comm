@@ -321,22 +321,27 @@ class ROSMasterHandler(object):
         self._shutdown('external shutdown request from [%s]: %s'%(caller_id, msg))
         return 1, "shutdown", 0
         
-    @apivalidate('')
-    def getUri(self, caller_id):
+    @apivalidate('', (is_ipv4('client_ip_address'),))
+    def getUri(self, caller_id, client_ip_address = "127.0.0.1"):
         """
         Get the XML-RPC URI of this server.
         @param caller_id str: ROS caller id    
+        @type  caller_id: str
+        @param client_ip_address: IP address of client making request
+        @type  client_ip_address: str 
         @return [int, str, str]: [1, "", xmlRpcUri]
         """
         return 1, "", self.uri
 
         
-    @apivalidate(-1)
-    def getPid(self, caller_id):
+    @apivalidate(-1, (is_ipv4('client_ip_address'),))
+    def getPid(self, caller_id, client_ip_address = "127.0.0.1"):
         """
         Get the PID of this server
         @param caller_id: ROS caller id
         @type  caller_id: str
+        @param client_ip_address: IP address of client making request
+        @type  client_ip_address: str 
         @return: [1, "", serverProcessPID]
         @rtype: [int, str, int]
         """

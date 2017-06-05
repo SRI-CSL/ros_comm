@@ -440,12 +440,14 @@ class ROSHandler(XmlRpcHandler):
             return -1, "method not authorized", []
 
     
-    @apivalidate('')
-    def getMasterUri(self, caller_id):
+    @apivalidate('', (is_ipv4('client_ip_address'),))
+    def getMasterUri(self, caller_id, client_ip_address = "127.0.0.1"):
         """
         Get the URI of the master node.
         @param caller_id: ROS caller id    
         @type  caller_id: str
+        @param client_ip_address: IP address of client making request
+        @type  client_ip_address: str 
         @return: [code, msg, masterUri]
         @rtype: [int, str, str]
         """
@@ -492,12 +494,14 @@ class ROSHandler(XmlRpcHandler):
             signal_shutdown('external shutdown request from [%s]: [%s]'%(caller_id, msg))
         return 1, "shutdown", 0
 
-    @apivalidate(-1)
-    def getPid(self, caller_id):
+    @apivalidate(-1, (is_ipv4('client_ip_address'),))
+    def getPid(self, caller_id, client_ip_address = "127.0.0.1"):
         """
         Get the PID of this server
         @param caller_id: ROS caller id
         @type  caller_id: str
+        @param client_ip_address: IP address of client making request
+        @type  client_ip_address: str 
         @return: [1, "", serverProcessPID]
         @rtype: [int, str, int]
         """
