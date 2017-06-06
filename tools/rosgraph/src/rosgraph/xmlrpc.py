@@ -99,7 +99,8 @@ class IPSilenceableXMLRPCRequestHandler(SilenceableXMLRPCRequestHandler):
 
     def insert_multicall_client_ip( self, doc ):
         """ Function to add client IP address for a multicall XMLRPC request
-            If method shutdown is called without optional "msg" argument, insert that as well
+            If method shutdown is called without optional "msg" argument, insert that as well so 
+            that the XMLRPC dispatch is done correctly
         """
         structs = doc.getElementsByTagName("struct")
         for s in structs:
@@ -122,6 +123,7 @@ class IPSilenceableXMLRPCRequestHandler(SilenceableXMLRPCRequestHandler):
                     else:
                         self.logger.warn( "multicall: unexpected entry %s" % name.data )
                 if methodName == "shutdown":
+                    # insert optional argument 'msg' for shutdown() if not provided
                     params = ElementTree.fromstring( datas.toxml() ).findall( "param" )
                     if len( params ) == 1:
                         self.logger.debug( "multicall: added msg param to shutdown()" )
@@ -134,7 +136,8 @@ class IPSilenceableXMLRPCRequestHandler(SilenceableXMLRPCRequestHandler):
 
     def decode_request_content(self, data):
         """ Function to add client IP address for a XMLRPC request for secure methods
-            If method shutdown is called without optional "msg" argument, insert that as well
+            If method shutdown is called without optional "msg" argument, insert that as well so 
+            that the XMLRPC dispatch is done correctly
         """
         data = SimpleXMLRPCRequestHandler.decode_request_content(self, data)
         doc = parseString(data)
@@ -151,6 +154,7 @@ class IPSilenceableXMLRPCRequestHandler(SilenceableXMLRPCRequestHandler):
                   </value></param>''' % (self.client_ip,))
             p = pdoc.firstChild.cloneNode(True)
             if methodName == "shutdown":
+                # insert optional argument 'msg' for shutdown() if not provided
                 params = ElementTree.fromstring( ps.toxml() ).findall( "param" )
                 if len( params ) == 1:
                     self.logger.debug( "added msg param to shutdown()" )
