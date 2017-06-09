@@ -9,7 +9,6 @@
 #include "xmlrpcpp/XmlRpcUtil.h"
 #include "xmlrpcpp/XmlRpcException.h"
 #include "xmlrpcpp/XmlRpcClientInfo.h"
-#include <stdio.h>
 
 
 using namespace XmlRpc;
@@ -152,14 +151,11 @@ XmlRpcServer::handleEvent(unsigned)
 void
 XmlRpcServer::acceptConnection()
 {
-  //ClientInfo& info = getClientInfo();
   int s = XmlRpcSocket::accept(this->getfd(), _clientInfo);
 
   map_ip[s] = _clientInfo.ip;
   map_port[s] = _clientInfo.port;
   map_family[s] = _clientInfo.family;
-
-  //printf( "[xmlrpc_cpp] accept connection from ip %s port %d fd %d\n", _clientInfo.ip.c_str(), _clientInfo.port, s);
 
   XmlRpcUtil::log(2, "XmlRpcServer::acceptConnection: socket %d", s);
   if (s < 0)
