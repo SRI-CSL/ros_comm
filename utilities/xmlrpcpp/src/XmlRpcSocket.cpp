@@ -187,24 +187,20 @@ XmlRpcSocket::accept(int fd, XmlRpcClientInfo& clientInfo)
 #else
   socklen_t
 #endif
-  addrlen = sizeof(addr);
+    addrlen = sizeof(addr);
   // accept will truncate the address if the buffer is too small.
   // As we are not using it, no special case for IPv6
   // has to be made.
-
   int result = (int) ::accept(fd, (struct sockaddr*)&addr, &addrlen);
 
   struct sockaddr_in* inaddr_ptr = (struct sockaddr_in *)&addr;
   char *ip = inet_ntoa(inaddr_ptr->sin_addr);
-
-  //printf("[xmlrpc_cpp] user request from ip address %s port %d \n", ip, inaddr_ptr->sin_port);
 
   clientInfo.family = inaddr_ptr->sin_family;
   clientInfo.port = inaddr_ptr->sin_port;
   clientInfo.ip = std::string(ip);
 
   return result;
-  //return (int) ::accept(fd, (struct sockaddr*)&addr, &addrlen);
 }
 
 

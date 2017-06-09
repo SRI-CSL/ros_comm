@@ -256,6 +256,7 @@ XmlRpcServerConnection::parseRequest(XmlRpcValue& params)
 }
 
 // Execute a named method with the specified params.
+// Note that it adds the XmlRpcClientInfo to allow authentication.
 bool
 XmlRpcServerConnection::executeMethod(const std::string& methodName, 
                                       XmlRpcValue& params, XmlRpcValue& result)

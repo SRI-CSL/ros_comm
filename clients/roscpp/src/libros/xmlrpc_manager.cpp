@@ -79,7 +79,6 @@ public:
 
   void execute(XmlRpcValue &params, XmlRpcClientInfo &client_info, XmlRpcValue &result)
   {
-    //printf( "[xmlrpc_cpp] received client_info: %s\n", client_info.ip.c_str() );
     func_(params, result, client_info);
   }
 
@@ -417,22 +416,6 @@ void XMLRPCManager::removeASyncConnection(const ASyncXMLRPCConnectionPtr& conn)
   removed_connections_.insert(conn);
 }
 
-//bool XMLRPCManager::bind(const std::string& function_name, const XMLRPCFunc_deprecated& cb)
-//{
-//  boost::mutex::scoped_lock lock(functions_mutex_);
-//  if (functions_.find(function_name) != functions_.end())
-//  {
-//    return false;
-//  }
-//
-//  FunctionInfo info;
-//  info.name = function_name;
-//  info.function = cb;
-//  info.wrapper.reset(new XMLRPCCallWrapper(function_name, cb, &server_));
-//  functions_[function_name] = info;
-//
-//  return true;
-//}
 
 bool XMLRPCManager::bind(const std::string& function_name, const XMLRPCFunc& cb)
 {
