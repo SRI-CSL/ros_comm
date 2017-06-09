@@ -811,7 +811,7 @@ void paramUpdateCallback(XmlRpc::XmlRpcValue& params, XmlRpc::XmlRpcValue& resul
   std::string caller_id( params[0] );
   std::string param_key( params[1] );
   if ( !is_uri_match( ros::master::getURI(), client_info.ip ) ) {
-    ROS_WARN_NAMED( AUTH, "paramUpdate( %s, %s, %s ) not authorized", caller_id.c_str(), param_key.c_str(), client_info.ip.c_str() );
+    ROS_WARN_NAMED(AUTH_LOG_NAME, "paramUpdate( %s, %s, %s ) not authorized", caller_id.c_str(), param_key.c_str(), client_info.ip.c_str() );
     result = xmlrpc::responseInt(-1, "method not authorized", 0);
     return;
   }

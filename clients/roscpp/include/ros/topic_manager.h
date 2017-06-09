@@ -40,7 +40,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 
-static const char AUTH[] = "roslaunch.auth";
+static const char AUTH_LOG_NAME[] = "roscpp.auth";
 
 namespace ros
 {

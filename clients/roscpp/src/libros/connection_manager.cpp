@@ -214,7 +214,7 @@ bool ConnectionManager::onConnectionHeaderReceived(const ConnectionPtr& conn, co
     header.getValue( "callerid", caller_id );
     std::string client_ip = uri_to_ip_address( conn->getClientURI() );
     if ( !is_subscriber_authorized( val, client_ip ) ) {
-      ROS_WARN_NAMED( AUTH, "received topic connection for %s from %s (%s) not authorized",
+      ROS_WARN_NAMED(AUTH_LOG_NAME, "received topic connection for %s from %s (%s) not authorized",
           val.c_str(), caller_id.c_str(), conn->getRemoteString().c_str());
       std::stringstream msg;
       msg << "Client [" << caller_id << "] wants topic connection for " << val << ", but " << client_ip << "is not authorized"; 

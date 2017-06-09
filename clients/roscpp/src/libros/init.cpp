@@ -170,7 +170,7 @@ void shutdownCallback(XmlRpc::XmlRpcValue& params, XmlRpc::XmlRpcValue& result, 
   if ( !is_uri_match( ros::master::getURI(), client_info.ip ) ) {
     std::string caller_id( params[0] );
     //std::string msg( params[1] );
-    ROS_WARN_NAMED( AUTH, "shutdown( %s, %s ) not authorized", caller_id.c_str(), client_info.ip.c_str() );
+    ROS_WARN_NAMED(AUTH_LOG_NAME, "shutdown( %s, %s ) not authorized", caller_id.c_str(), client_info.ip.c_str() );
     result = xmlrpc::responseInt(-1, "method not authorized", 0);
     return;
   }
