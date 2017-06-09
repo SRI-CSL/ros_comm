@@ -125,7 +125,6 @@ public:
   void addASyncConnection(const ASyncXMLRPCConnectionPtr& conn);
   void removeASyncConnection(const ASyncXMLRPCConnectionPtr& conn);
 
-  //bool bind(const std::string& function_name, const XMLRPCFunc_deprecated& cb);
   bool bind(const std::string& function_name, const XMLRPCFunc& cb);
   void unbind(const std::string& function_name);
 

@@ -32,7 +32,6 @@ bool is_uri_match( const std::string uri, const std::string ip_address ) {
 URLParser::URLParser(const string url_s) 
   : url_( url_s )
 {
-  //cout << "parsing " << url_s << std::endl;
   this->parse(url_s);
 }
 
@@ -44,19 +43,15 @@ std::string URLParser::get_host( ) {
   return host_;
 }
 
+/// An ip_address is considered local if it is 127.*.*.* or 169.254.*.*
 bool is_local( const std::string ip_address ) {
   struct sockaddr_in addr;
   inet_aton( ip_address.c_str(), &addr.sin_addr );
-  //int addr_3 = ( addr.sin_addr.s_addr & 0xff000000 ) >> 24;
-  //int addr_2 = ( addr.sin_addr.s_addr & 0x00ff0000 ) >> 16;
   int addr_1 = ( addr.sin_addr.s_addr & 0x0000ff00 ) >> 8;
   int addr_0 = ( addr.sin_addr.s_addr & 0x000000ff );
   if ( addr_0 == 127 || ( addr_0 == 169 && addr_1 == 254 ) ) {
-    //std::cout << ip_address << ": " << addr_0 << "." << addr_1 << "." << addr_2 << "." << addr_3 << std::endl;
-    //std::cout << ip_address << " is local address!" << std::endl;
     return true;
   }
-  //std::cout << ip_address << " is not local address!" << std::endl;
   return false;
 }
 
@@ -114,6 +109,7 @@ void URLParser::parse(const string& url_s)
 
     int err = getaddrinfo(host_.c_str(), NULL, &hints, &res);
     if (err != 0) {
+      //TODO we should actually fail. otherwise we will be in strange state no?
       printf("getaddrinfo: %s\n", gai_strerror(err));
     }
     else {

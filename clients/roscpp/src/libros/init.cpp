@@ -155,28 +155,22 @@ void atexitCallback()
   }
 }
 
-void shutdownCallback(XmlRpc::XmlRpcValue& params, XmlRpc::XmlRpcValue& result)
-{
-  (void)params;
-  result = xmlrpc::responseInt(0, "Deprecated function", 0);
-  std::cerr << "Deprecated function call in function " << __func__ << " in file " << __FILE__ << std::endl;
-}
-
 void shutdownCallback(XmlRpc::XmlRpcValue& params, XmlRpc::XmlRpcValue& result, XmlRpc::XmlRpcClientInfo& client_info)
 {
-  int num_params = 0;
-  if (params.getType() == XmlRpc::XmlRpcValue::TypeArray)
-    num_params = params.size();
   if ( !is_uri_match( ros::master::getURI(), client_info.ip ) ) {
     std::string caller_id( params[0] );
-    //std::string msg( params[1] );
     ROS_WARN_NAMED(AUTH_LOG_NAME, "shutdown( %s, %s ) not authorized", caller_id.c_str(), client_info.ip.c_str() );
     result = xmlrpc::responseInt(-1, "method not authorized", 0);
     return;
   }
+
+  int num_params = 0;
+  if (params.getType() == XmlRpc::XmlRpcValue::TypeArray)
+    num_params = params.size();
   if (num_params > 1)
   {
     std::string reason = params[1];
+    ROS_WARN("Shutdown request received.");
     ROS_WARN("Reason given for shutdown: [%s]", reason.c_str());
     requestShutdown();
   }
