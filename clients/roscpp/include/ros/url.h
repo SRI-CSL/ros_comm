@@ -1,5 +1,5 @@
-#ifndef _URL_H_
-#define _URL_H_    
+#ifndef ROSCPP_URL_H_
+#define ROSCPP_URL_H_    
 
 #include <string>
 
@@ -27,4 +27,4 @@ class URLParser {
     std::string url_, protocol_, host_, path_, query_, ip_address_, port_;
 };
 
-#endif // _URL_H_ 
+#endif // ROSCPP_URL_H_ 
