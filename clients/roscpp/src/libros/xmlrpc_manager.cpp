@@ -87,13 +87,6 @@ private:
   XMLRPCFunc func_;
 };
 
-void getPid(const XmlRpcValue& params, XmlRpcValue& result)
-{
-  (void)params;
-  result = xmlrpc::responseInt(0, "Deprecated function", 0);
-  std::cerr << "Deprecated function call in function " << __func__ << " in file " << __FILE__ << std::endl;
-}
-
 void getPid(const XmlRpcValue& params, XmlRpcValue& result, XmlRpcClientInfo& client_info)
 {
   (void)params;
@@ -135,7 +128,7 @@ void XMLRPCManager::start()
 {
   shutting_down_ = false;
   port_ = 0;
-  bind("getPid", static_cast<void (*)(const XmlRpcValue& , XmlRpcValue& , XmlRpcClientInfo& )>(&getPid));
+  bind("getPid", getPid);
 
   bool bound = server_.bindAndListen(0);
   (void) bound;

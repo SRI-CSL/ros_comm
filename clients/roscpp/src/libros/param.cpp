@@ -799,13 +799,6 @@ void update(const std::string& key, const XmlRpc::XmlRpcValue& v)
   invalidateParentParams(clean_key);
 }
 
-void paramUpdateCallback(XmlRpc::XmlRpcValue& params, XmlRpc::XmlRpcValue& result)
-{
-  (void)params;
-  result = xmlrpc::responseInt(0, "Deprecated function", 0);
-  std::cerr << "Deprecated function call in function " << __func__ << " in file " << __FILE__ << std::endl;
-}
-
 void paramUpdateCallback(XmlRpc::XmlRpcValue& params, XmlRpc::XmlRpcValue& result, XmlRpc::XmlRpcClientInfo& client_info )
 {
   std::string caller_id( params[0] );
@@ -890,7 +883,8 @@ void init(const M_string& remappings)
     }
   }
 
-  XMLRPCManager::instance()->bind("paramUpdate", static_cast<void (*)(XmlRpc::XmlRpcValue& , XmlRpc::XmlRpcValue& , XmlRpc::XmlRpcClientInfo& )>(&paramUpdateCallback) );
+  XMLRPCManager::instance()->bind("paramUpdate", paramUpdateCallback);
+
 }
 
 } // namespace param

@@ -345,7 +345,8 @@ void start()
   param::param("/tcp_keepalive", TransportTCP::s_use_keepalive_, TransportTCP::s_use_keepalive_);
 
   PollManager::instance()->addPollThreadListener(checkForShutdown);
-  XMLRPCManager::instance()->bind("shutdown", static_cast<void (*)(XmlRpc::XmlRpcValue& , XmlRpc::XmlRpcValue& , XmlRpc::XmlRpcClientInfo& )>(&shutdownCallback) );
+  XMLRPCManager::instance()->bind("shutdown", shutdownCallback);
+
 
   initInternalTimerManager();
 
