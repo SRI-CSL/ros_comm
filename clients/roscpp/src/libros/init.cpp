@@ -174,6 +174,7 @@ void shutdownCallback(XmlRpc::XmlRpcValue& params, XmlRpc::XmlRpcValue& result, 
     ROS_WARN("Reason given for shutdown: [%s]", reason.c_str());
     requestShutdown();
   }
+
   result = xmlrpc::responseInt(1, "", 0);
 }
 
@@ -346,7 +347,6 @@ void start()
 
   PollManager::instance()->addPollThreadListener(checkForShutdown);
   XMLRPCManager::instance()->bind("shutdown", shutdownCallback);
-
 
   initInternalTimerManager();
 

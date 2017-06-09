@@ -884,7 +884,6 @@ void init(const M_string& remappings)
   }
 
   XMLRPCManager::instance()->bind("paramUpdate", paramUpdateCallback);
-
 }
 
 } // namespace param

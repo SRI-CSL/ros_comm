@@ -409,7 +409,6 @@ void XMLRPCManager::removeASyncConnection(const ASyncXMLRPCConnectionPtr& conn)
   removed_connections_.insert(conn);
 }
 
-
 bool XMLRPCManager::bind(const std::string& function_name, const XMLRPCFunc& cb)
 {
   boost::mutex::scoped_lock lock(functions_mutex_);

@@ -1044,13 +1044,6 @@ void TopicManager::getPublications(XmlRpcValue &pubs)
 
 extern std::string console::g_last_error_message;
 
-void TopicManager::pubUpdateCallback(XmlRpc::XmlRpcValue& params, XmlRpc::XmlRpcValue& result)
-{
-  (void)params;
-  std::cerr << "Deprecated function call in function " << __func__ << " in file " << __FILE__ << std::endl;
-  result = xmlrpc::responseInt(0, "Deprecated function call", 0);
-}
-
 void TopicManager::pubUpdateCallback(XmlRpc::XmlRpcValue& params, XmlRpc::XmlRpcValue& result, XmlRpc::XmlRpcClientInfo& client_info)
 {
   std::string caller_id( params[0] );
@@ -1075,13 +1068,6 @@ void TopicManager::pubUpdateCallback(XmlRpc::XmlRpcValue& params, XmlRpc::XmlRpc
       result = xmlrpc::responseInt(0, console::g_last_error_message, 0);
     }
   }
-}
-
-void TopicManager::requestTopicCallback(XmlRpc::XmlRpcValue& params, XmlRpc::XmlRpcValue& result)
-{
-  (void)params;
-  std::cerr << "Deprecated function call in function " << __func__ << " in file " << __FILE__ << std::endl;
-  result = xmlrpc::responseInt(0, "Deprecated function call", 0);
 }
 
 void TopicManager::requestTopicCallback(XmlRpc::XmlRpcValue& params, XmlRpc::XmlRpcValue& result, XmlRpc::XmlRpcClientInfo& client_info)
