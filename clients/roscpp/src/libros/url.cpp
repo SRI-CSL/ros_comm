@@ -15,6 +15,7 @@
 #include <arpa/inet.h>
 
 #include "ros/url.h"
+#include "ros/ros.h"
 
 using namespace std;
 
@@ -31,6 +32,7 @@ bool is_uri_match( const std::string uri, const std::string ip_address ) {
 
 URLParser::URLParser(const string url_s) 
   : url_( url_s )
+  , ip_address_( "0.0.0.0" )
 {
   this->parse(url_s);
 }
@@ -109,8 +111,8 @@ void URLParser::parse(const string& url_s)
 
     int err = getaddrinfo(host_.c_str(), NULL, &hints, &res);
     if (err != 0) {
-      //TODO we should actually fail. otherwise we will be in strange state no?
-      printf("getaddrinfo: %s\n", gai_strerror(err));
+      ROS_WARN( "Unable to parse hostname: %s", host_.c_str() );
+      ip_address_ = std::string( "0.0.0.0" );
     }
     else {
       char addrstr[100];
